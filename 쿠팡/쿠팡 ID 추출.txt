@@ -1,0 +1,41 @@
+import pandas as pd
+import numpy
+from selenium import webdriver
+import re
+import time
+import csv
+import datetime as dt
+from tqdm import tqdm
+
+#  쿠팡 모델명 뽑기
+# ['아디다스 = 80','나이키=79','휠라 = 83','푸마 = 81','뉴발란스 = 84','리복=85','컨버스=86']
+
+brand_cord = ['80', '79', '83', '81', '84', '85', '86']
+#brand_cord = ['80','79']
+coopang_name_id = []
+options = webdriver.ChromeOptions()
+options.add_argument('headless')
+options.add_argument('window-size=1920x1080')
+options.add_argument("disable-gpu")
+options.add_argument(f'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36')
+driver = webdriver.Chrome(r'/home/jupyter/chromedriver',options=options)
+for j in tqdm(brand_cord):
+    for i in range(1, 10):
+        url = 'https://www.coupang.com/np/categories/187365?listSize=120&brand='+j+'&offerCondition=&filterType=&isPriceRange=false&minPrice=&maxPrice=&page=' + str(i) + '&channel=user&fromComponent=N&selectedPlpKeepFilter=&sorter=bestAsc&filter=&rating=0'
+        driver.get(url)
+        driver.implicitly_wait(4)
+        cp_prod_id_list = driver.find_elements_by_xpath('/html/body/div[2]/section/form/div/div/div[1]/div/ul/li')
+        cp_prod_name_list = driver.find_elements_by_xpath('/html/body/div[2]/section/form/div/div/div[1]/div/ul/li/a/dl/dd/div[2]')
+        for q, w in zip(cp_prod_id_list, cp_prod_name_list):
+            cp_prod_id = q.get_attribute('id')
+            cp_prod_name = w.text
+            coopang_name_id.append([cp_prod_name, cp_prod_id])
+
+dt = dt.datetime.now()
+filename = 'coopang_name_id{}.csv'.format(dt.strftime("%Y_%m_%d"))
+f = open(filename, 'w', encoding='utf-8', newline='')
+csvWriter = csv.writer(f)
+csvWriter.writerow(['prod_name', 'prod_id'])
+for i in coopang_name_id:
+    csvWriter.writerow(i)
+f.close()

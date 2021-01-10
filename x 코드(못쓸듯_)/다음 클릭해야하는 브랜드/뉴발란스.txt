@@ -1,0 +1,48 @@
+from selenium import webdriver
+import re
+from bs4 import BeautifulSoup
+import csv
+import time
+
+base_url = 'https://www.nbkorea.com/product/productList.action?cateGrpCode=250110&cIdx=1280'
+options = webdriver.ChromeOptions()
+options.add_argument('headless')
+options.add_argument('window-size=1920x1080')
+options.add_argument("disable-gpu")
+driver = webdriver.Chrome(r'D:\big11\[90]tools\chromedriver.exe', options=options)
+driver.implicitly_wait(5)
+driver.get(base_url)
+
+
+# driver = webdriver.Chrome(r'D:\big11\[90]tools\chromedriver.exe')
+# driver.implicitly_wait(5)
+# driver.get(base_url)
+
+click = driver.find_element_by_xpath('/html/body/div[1]/div[3]/div/div[4]/p/a')
+allsearchlist = []
+
+while True:
+    try:
+        time.sleep(3)
+        click.click()
+    except:
+        break
+            
+        
+html = driver.page_source
+soup = BeautifulSoup(html)
+re = soup.select(' li > a > p')
+allsearchlist.append(re)
+
+print(allsearchlist)
+f = open('Newbalance.csv', 'w', encoding='utf-8', newline='')
+csvWriter = csv.writer(f)
+for i in allsearchlist:
+    csvWriter.writerow(i)
+
+f.close()
+print('완료')     
+    
+    /html/body/div[1]/div[3]/div/div[4]/p/a
+    
+    /html/body/div[1]/div[3]/div/div[4]/p/a

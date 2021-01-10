@@ -1,0 +1,78 @@
+import bs4
+from bs4 import BeautifulSoup
+import pandas as pd
+import numpy
+from selenium import webdriver
+import re
+import time
+import csv
+import datetime as dt
+from tqdm import tqdm
+import requests
+import urllib.request
+
+#  파일 불러오기 에러 해결
+options = webdriver.ChromeOptions()
+options.add_argument('headless')
+options.add_argument('window-size=1920x1080')
+options.add_argument("disable-gpu")
+options.add_argument(f'user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.87 Safari/537.36')
+driver = webdriver.Chrome(r'C:\Users\Home\PycharmProjects\pythonProject1\chromedriver.exe',options=options)
+
+now = dt.datetime.now()
+nowDate = now.strftime('%Y_%m_%d')
+pandas_path = r'C:\Users\Home\PycharmProjects\pythonProject1\Review\damoa_model_num_list_and_moer{}.csv'.format(nowDate)
+csv_test = pd.read_csv(pandas_path)
+danawa_all_model = csv_test['prod_id']
+danawa_rvws = []
+coopang_img_cook = []
+rvw_img_url_list = []
+
+
+for modelId in tqdm(danawa_all_model):
+    page = 0
+    while True:
+        page = page + 1
+        url = 'http://prod.danawa.com/info/dpg/ajax/companyProductReview.ajax.php?t=0.10499996477784657&prodCode='+str(modelId)+'&cate1Code=1824&page='+str(page)+'&limit=100&score=0&sortType=&usefullScore=Y&innerKeyword=&subjectWord=0&subjectWordString=&subjectSimilarWordString=&_=1600608005961'
+        driver.get(url)
+        time.sleep(3)
+        rvw_date = driver.find_elements_by_xpath('/html/body/div/div[3]/div[2]/ul/li/div[1]/span[2]')
+        rvw_list = driver.find_elements_by_xpath('/html/body/div/div[3]/div[2]/ul/li/div[2]/div[1]/div[2]')
+        danawa_img_list = driver.find_elements_by_class_name('center > img')
+        for danawa_img_one in danawa_img_list:
+            mosinsa_img_url = danawa_img_one.get_attribute('src')
+            rvw_img_url_list.append(mosinsa_img_url)
+        try:
+            no_data = driver.find_element_by_class_name('no_data')
+            if no_data != None:
+                break
+        except:
+            pass
+        for q,w in zip(rvw_date,rvw_list):
+            danawa_rvws.append([q.text,w.text,modelId])
+    n = 1
+    for url in rvw_img_url_list:
+        n = n + 1
+        r = requests.get(url)
+        file = open(r'C:\Users\Home\PycharmProjects\pythonProject1\Danawaimg\danawarvw_img{}.jpg'.format(str(modelId) +str('No') + str(n)), 'wb')
+        file.write(r.content)
+        file.close()
+
+dt = dt.datetime.now()
+filename ='damoa_rvw{}.csv'.format(dt.strftime('%Y_%m_%d'))
+
+f = open(filename, 'w', encoding='utf-8', newline='')
+csvWriter = csv.writer(f)
+csvWriter.writerow(['prod_name','prod_info','prod_id'])
+for i in danawa_rvws:
+    csvWriter.writerow(i)
+f.close()
+
+
+
+
+
+
+
+
+
